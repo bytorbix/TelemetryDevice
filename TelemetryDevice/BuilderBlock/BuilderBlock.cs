@@ -41,7 +41,7 @@ namespace TelemetryDevice.BuilderBlock
             if (!ValidateSyncByte(payload, _sync2)) return false;
             if (!ValidateSyncByte(payload, _sync3)) return false;
 
-            int paramValue = (payload[_tailNumber.Location] << 8) | payload[_tailNumber.Location + 1]; // 2 Byte value param
+            int paramValue = (payload[_tailNumber.Location + 1] << 8) | payload[_tailNumber.Location]; // 2 Byte value param
             if (!(paramValue >= _tailNumber.Min && paramValue <= _tailNumber.Max)) 
             {
                 _logger.LogWarning("Dropping payload: {Field} mismatch.", _tailNumber.Identifier);

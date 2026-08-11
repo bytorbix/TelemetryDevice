@@ -48,11 +48,11 @@ namespace TelemetryDevice.ParserBlock
             int bytes = param.Size / BITS_PER_BYTE;
 
             long value = 0;
-            for (int i = 0; i < bytes; i++)
+            for (int i = bytes - 1; i >= 0; i--)
             {
                 value = (value << BITS_PER_BYTE) | payload[param.Location + i];
             }
-             
+
             if (param.Type == IcdDataType.FLOAT)
             {
                 return BitConverter.Int32BitsToSingle((int)value);
