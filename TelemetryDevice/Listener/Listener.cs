@@ -1,5 +1,7 @@
 ﻿using PacketDotNet;
 using SharpPcap;
+using System.Threading.Tasks.Dataflow;
+using TelemetryDevice.BuilderBlock;
 
 namespace TelemetryDevice.Listener
 {
@@ -8,9 +10,12 @@ namespace TelemetryDevice.Listener
         private readonly NetworkCaptureService _captureService;
         private ICaptureDevice? _activeDevice;
 
-        public Listener(NetworkCaptureService captureService)
+        private readonly Builder _builder;
+
+        public Listener(NetworkCaptureService captureService, Builder _builder)
         {
             _captureService = captureService;
+            this._builder = _builder;
         }
 
         public void StartListening(string ip, int port)
@@ -34,7 +39,7 @@ namespace TelemetryDevice.Listener
             UdpPacket? udpPacket = packet.Extract<UdpPacket>();
             if (udpPacket == null) { return; }
             byte[] payload = udpPacket.PayloadData;
-
+            _builder.Block.Post(payload); // pipeline the payload into the Builder
 
         }
 

@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="SharpPcap" Version="6.3.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="10.0.10" />
   </ItemGroup>
 
   <ItemGroup>
