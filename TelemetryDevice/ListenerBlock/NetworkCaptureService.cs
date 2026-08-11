@@ -1,6 +1,6 @@
 using SharpPcap;
 
-namespace TelemetryDevice.Listener
+namespace TelemetryDevice.ListenerBlock
 {
     // Owns picking + opening the capture device. Precedence: explicit config first,
     // then loopback (\Device\NPF_Loopback) as a dev-convenience fallback, else throw.

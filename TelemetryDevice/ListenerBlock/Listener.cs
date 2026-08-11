@@ -3,7 +3,7 @@ using SharpPcap;
 using System.Threading.Tasks.Dataflow;
 using TelemetryDevice.BuilderBlock;
 
-namespace TelemetryDevice.Listener
+namespace TelemetryDevice.ListenerBlock
 {
     public class Listener
     {
