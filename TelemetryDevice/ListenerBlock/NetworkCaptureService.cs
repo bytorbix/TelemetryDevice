@@ -9,6 +9,7 @@ namespace TelemetryDevice.ListenerBlock
         private readonly IConfiguration _configuration;
         private readonly string DEVICE_NAME_FIELD="DeviceName";
         private readonly string FALLBACK_DEVICE_NAME="\\Device\\NPF_Loopback";
+        private readonly int DEFAULT_PORT = 5000;
 
         public NetworkCaptureService(IConfiguration configuration)
         {

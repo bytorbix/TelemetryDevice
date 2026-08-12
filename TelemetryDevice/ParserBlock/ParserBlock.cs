@@ -25,7 +25,7 @@ namespace TelemetryDevice.ParserBlock
         public string Parse(byte[] payload)
         {
             int correlatorValue = ExtractBitField(payload, _correlator);
-            var result = new Dictionary<string, object>();
+            Dictionary<string, object> result = new Dictionary<string, object>();
 
             foreach (IcdParam param in _doc.Params)
             {

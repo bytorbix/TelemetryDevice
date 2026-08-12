@@ -1,7 +1,9 @@
 using TelemetryDevice.BuilderBlock;
 using TelemetryDevice.Icd;
+using TelemetryDevice.KafkaBlock;
 using TelemetryDevice.ListenerBlock;
 using TelemetryDevice.ParserBlock;
+using TelemetryDevice.PipelineBlock;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +17,8 @@ builder.Services.AddSingleton<NetworkCaptureService>();
 builder.Services.AddSingleton<Parser>();
 builder.Services.AddSingleton<Builder>();
 builder.Services.AddSingleton<Listener>();
+builder.Services.AddSingleton<PipelineService>();
+builder.Services.AddSingleton<Kafka>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -23,7 +27,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-
+app.Services.GetRequiredService<PipelineService>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
