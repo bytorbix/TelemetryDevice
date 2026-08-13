@@ -3,12 +3,13 @@ using TelemetryDevice.BuilderBlock;
 using TelemetryDevice.ListenerBlock;
 using TelemetryDevice.ParserBlock;
 using TelemetryDevice.KafkaBlock;
+using TelemetryDevice.MongoBlock;
 
 namespace TelemetryDevice.PipelineBlock
 {
     public class PipelineService
     {
-        public PipelineService(Listener listener, Builder builder, Parser parser, Kafka kafka ,ILogger<PipelineService> logger)
+        public PipelineService(Listener listener, Builder builder, Parser parser, Kafka kafka, Mongo mongo ,ILogger<PipelineService> logger)
         {
 
             DataflowLinkOptions linkOptions = new() { PropagateCompletion = true };
@@ -21,6 +22,7 @@ namespace TelemetryDevice.PipelineBlock
             parser.Block.LinkTo(broadcast, linkOptions);
             broadcast.LinkTo(sink, linkOptions);
             broadcast.LinkTo(kafka.Block, linkOptions);
+            broadcast.LinkTo(mongo.Block, linkOptions);
 
 
 
