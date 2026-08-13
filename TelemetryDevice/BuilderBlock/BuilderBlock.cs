@@ -11,6 +11,7 @@ namespace TelemetryDevice.BuilderBlock
         private readonly IcdParam _sync2;
         private readonly IcdParam _sync3;
         private readonly IcdParam _tailNumber;
+        private int? _expectedTailNumber;
 
         public Builder(IcdDocument doc, ILogger<Builder> logger)
         {
@@ -20,6 +21,11 @@ namespace TelemetryDevice.BuilderBlock
             _sync3 = doc.GetField("sync_3");
             _tailNumber = doc.GetField("Tail number");
             Block = new(payload => TryBuild(payload) ? new[] { payload } : Array.Empty<byte[]>());
+        }
+
+        public void SetExpectedTailNumber(int tailNumber)
+        {
+            _expectedTailNumber = tailNumber;
         }
 
         private bool ValidateSyncByte(byte[] payload, IcdParam sync)
@@ -33,18 +39,27 @@ namespace TelemetryDevice.BuilderBlock
         public bool TryBuild(byte[] payload)
         {
             if (payload == null) return false;
-            if (!ValidateSyncByte(payload, _sync1)) return false;
-            if (!ValidateSyncByte(payload, _sync2)) return false;
-            if (!ValidateSyncByte(payload, _sync3)) return false;
-
-            int paramValue = (payload[_tailNumber.Location + 1] << 8) | payload[_tailNumber.Location]; // 2 Byte value param
-            if (!(paramValue >= _tailNumber.Min && paramValue <= _tailNumber.Max)) 
+            try
             {
-                _logger.LogWarning("Dropping payload: {Field} mismatch.", _tailNumber.Identifier);
+                if (!ValidateSyncByte(payload, _sync1) || !ValidateSyncByte(payload, _sync2) || !ValidateSyncByte(payload, _sync3))
+                {
+                    return false;
+                }
+
+                int paramValue = (payload[_tailNumber.Location + 1] << 8) | payload[_tailNumber.Location]; // 2 Byte value param
+                if (!(paramValue >= _tailNumber.Min && paramValue <= _tailNumber.Max) || _expectedTailNumber != paramValue)
+                {
+                    _logger.LogWarning("Dropping payload: {Field} mismatch.", _tailNumber.Identifier);
+                    return false;
+                }
+
+                return true;
+            }
+            catch (IndexOutOfRangeException)
+            {
+                _logger.LogWarning("Dropping payload: too short for expected ICD fields.");
                 return false;
             }
-
-            return true;
         }
 
 

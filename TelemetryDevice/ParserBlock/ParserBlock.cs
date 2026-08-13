@@ -1,5 +1,5 @@
 using System.Numerics;
-using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks.Dataflow;
 using TelemetryDevice.Icd;
 
@@ -9,41 +9,51 @@ namespace TelemetryDevice.ParserBlock
     {
         private readonly IcdDocument _doc;
         private readonly IcdParam _correlator;
+        private readonly ILogger<Parser> _logger;
 
         private const int BITS_PER_BYTE = 8;
         private const string CORRELATOR_PARAM_ID = "correlator";
 
-        public TransformBlock<byte[], string> Block { get; }
+        public TransformManyBlock<byte[], string> Block { get; }
 
-        public Parser(IcdDocument doc)
+        public Parser(IcdDocument doc, ILogger<Parser> logger)
         {
             _doc = doc;
+            _logger = logger;
             _correlator = doc.GetField(CORRELATOR_PARAM_ID);
-            Block = new TransformBlock<byte[], string>(payload => Parse(payload));
+            Block = new TransformManyBlock<byte[], string>(payload => Parse(payload));
         }
 
-        public string Parse(byte[] payload)
+        public IEnumerable<string> Parse(byte[] payload)
         {
-            int correlatorValue = ExtractBitField(payload, _correlator);
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
-            foreach (IcdParam param in _doc.Params)
+            try
             {
-                if (param.CorrValue != 0 && (param.CorrValue & correlatorValue) == 0)
-                {
-                    continue;
-                }
-                result[param.Identifier] = DecodeField(payload, param);
-            }
+                int correlatorValue = ExtractBitField(payload, _correlator);
+                JsonObject result = new JsonObject();
 
-            return JsonSerializer.Serialize(result); // parser output is json
+                foreach (IcdParam param in _doc.Params)
+                {
+                    if (param.CorrValue != 0 && (param.CorrValue & correlatorValue) == 0)
+                    {
+                        continue;
+                    }
+                    result[param.Identifier] = DecodeField(payload, param);
+                }
+
+                return new[] { result.ToJsonString() }; // parser output is json
+            }
+            catch (IndexOutOfRangeException)
+            {
+                _logger.LogWarning("Dropping payload: too short for expected ICD fields.");
+                return Array.Empty<string>();
+            }
         }
 
-        private object DecodeField(byte[] payload, IcdParam param)
+        private JsonValue DecodeField(byte[] payload, IcdParam param)
         {
             if (param.Size < BITS_PER_BYTE)
             {
-                return ExtractBitField(payload, param);
+                return JsonValue.Create(ExtractBitField(payload, param));
             }
             int bytes = param.Size / BITS_PER_BYTE;
 
@@ -53,12 +63,12 @@ namespace TelemetryDevice.ParserBlock
                 value = (value << BITS_PER_BYTE) | payload[param.Location + i];
             }
 
-            if (param.Type == IcdDataType.FLOAT)
+            return param.Type switch
             {
-                return BitConverter.Int32BitsToSingle((int)value);
-            }
-
-            return value;
+                IcdDataType.FLOAT => JsonValue.Create(BitConverter.Int32BitsToSingle((int)value)),
+                IcdDataType.INTEGER => JsonValue.Create(value),
+                _ => throw new NotSupportedException($"Unsupported ICD data type: {param.Type}")
+            };
         }
 
         private int ExtractBitField(byte[] payload, IcdParam param)

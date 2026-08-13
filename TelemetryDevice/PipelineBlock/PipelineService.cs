@@ -27,7 +27,9 @@ namespace TelemetryDevice.PipelineBlock
             ObserveFaults(listener.Block, logger, "Listener");
             ObserveFaults(builder.Block, logger, "Builder");
             ObserveFaults(parser.Block, logger, "Parser");
+            ObserveFaults(broadcast, logger, "Broadcast");
             ObserveFaults(sink, logger, "Sink");
+            ObserveFaults(kafka.Block, logger, "Kafka");
         }
 
         private static void ObserveFaults(IDataflowBlock block, ILogger logger, string blockName)

@@ -10,23 +10,6 @@ namespace TelemetryDevice.KafkaBlock
         private readonly string _topic;
         public ActionBlock<string> Block { get; }
 
-        private async Task PublishAsync(string json)
-        {
-            try
-            {
-                await _producer.ProduceAsync(_topic, new Message<Null, string> { Value = json });
-            }
-            catch (ProduceException<Null, string> ex)
-            {
-                _logger.LogWarning(ex, "Dropping message: Kafka produce failed for topic {Topic}.", _topic);
-            }
-        }
-        public void Dispose()
-        {
-            _producer.Flush(TimeSpan.FromSeconds(10));
-            _producer.Dispose();
-        }
-
         public Kafka(IConfiguration configuration, ILogger<Kafka> logger)
         {
             _logger = logger;
@@ -39,5 +22,22 @@ namespace TelemetryDevice.KafkaBlock
             Block = new ActionBlock<string>(PublishAsync);
         }
 
+        private async Task PublishAsync(string json)
+        {
+            try
+            {
+                await _producer.ProduceAsync(_topic, new Message<Null, string> { Value = json });
+            }
+            catch (ProduceException<Null, string> ex)
+            {
+                _logger.LogWarning(ex, "Dropping message: Kafka produce failed for topic {Topic}.", _topic);
+            }
+        }
+
+        public void Dispose()
+        {
+            _producer.Flush(TimeSpan.FromSeconds(10));
+            _producer.Dispose();
+        }
     }
 }
