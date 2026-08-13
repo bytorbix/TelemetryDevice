@@ -10,7 +10,7 @@ namespace TelemetryDevice.ListenerBlock
         private readonly ILogger<Listener> _logger;
         private ICaptureDevice? _activeDevice;
 
-        public BufferBlock<byte[]> Block { get; } = new();
+        public BufferBlock<CapturedPacket> Block { get; } = new();
 
         public Listener(NetworkCaptureService captureService, ILogger<Listener> logger)
         {
@@ -37,6 +37,9 @@ namespace TelemetryDevice.ListenerBlock
             {
                 _captureService.Open(_activeDevice, OnPacketArrivalHandler, filter);
                 _captureService.Start(_activeDevice);
+                _logger.LogInformation(
+                    "Telemetry device initiated. Listening on {Device} ({Description}) for {Filter}. Capture active: {Started}",
+                    _activeDevice.Name, _activeDevice.Description, filter, _activeDevice.Started);
             }
             catch (SharpPcap.PcapException)
             {
@@ -50,11 +53,14 @@ namespace TelemetryDevice.ListenerBlock
             try
             {
                 RawCapture rawPacket = e.GetPacket();
+                DateTime timestamp = rawPacket.Timeval.Date;
+
                 Packet packet = Packet.ParsePacket(rawPacket.LinkLayerType, rawPacket.Data);
                 UdpPacket? udpPacket = packet.Extract<UdpPacket>();
                 if (udpPacket == null) { return; }
                 byte[] payload = udpPacket.PayloadData;
-                Block.Post(payload);
+                
+                Block.Post(new CapturedPacket(payload, timestamp));
             }
             catch (Exception ex)
             {

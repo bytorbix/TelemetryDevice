@@ -1,12 +1,13 @@
 using System.Threading.Tasks.Dataflow;
 using TelemetryDevice.Icd;
+using TelemetryDevice.ListenerBlock;
 
 namespace TelemetryDevice.BuilderBlock
 {
     public class Builder
     {
         private readonly ILogger<Builder> _logger;
-        public TransformManyBlock<byte[], byte[]> Block { get; }
+        public TransformManyBlock<CapturedPacket, CapturedPacket> Block { get; }
         private readonly IcdParam _sync1;
         private readonly IcdParam _sync2;
         private readonly IcdParam _sync3;
@@ -20,7 +21,7 @@ namespace TelemetryDevice.BuilderBlock
             _sync2 = doc.GetField("sync_2");
             _sync3 = doc.GetField("sync_3");
             _tailNumber = doc.GetField("Tail number");
-            Block = new(payload => TryBuild(payload) ? new[] { payload } : Array.Empty<byte[]>());
+            Block = new(captured => TryBuild(captured.payload) ? new[] { captured } : Array.Empty<CapturedPacket>());
         }
 
         public void SetExpectedTailNumber(int tailNumber)

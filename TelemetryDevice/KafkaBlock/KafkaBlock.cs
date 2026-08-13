@@ -14,9 +14,10 @@ namespace TelemetryDevice.KafkaBlock
         {
             _logger = logger;
             _topic = configuration["Kafka:Topic"] ?? throw new InvalidOperationException("Kafka:Topic is not configured");
+
             ProducerConfig config = new()
             {
-                BootstrapServers = configuration["Kafka:BootStrapServers"] ?? throw new InvalidOperationException("Kafka:BootstrapServers is not configured")
+                BootstrapServers = configuration["Kafka:BootstrapServers"] ?? throw new InvalidOperationException("Kafka:BootstrapServers is not configured")
             };
             _producer = new ProducerBuilder<Null, string>(config).Build();
             Block = new ActionBlock<string>(PublishAsync);

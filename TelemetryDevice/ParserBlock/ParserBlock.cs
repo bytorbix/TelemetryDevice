@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks.Dataflow;
 using TelemetryDevice.Icd;
+using TelemetryDevice.ListenerBlock;
 
 namespace TelemetryDevice.ParserBlock
 {
@@ -14,21 +15,21 @@ namespace TelemetryDevice.ParserBlock
         private const int BITS_PER_BYTE = 8;
         private const string CORRELATOR_PARAM_ID = "correlator";
 
-        public TransformManyBlock<byte[], string> Block { get; }
+        public TransformManyBlock<CapturedPacket, string> Block { get; }
 
         public Parser(IcdDocument doc, ILogger<Parser> logger)
         {
             _doc = doc;
             _logger = logger;
             _correlator = doc.GetField(CORRELATOR_PARAM_ID);
-            Block = new TransformManyBlock<byte[], string>(payload => Parse(payload));
+            Block = new TransformManyBlock<CapturedPacket, string>(captured => Parse(captured));
         }
 
-        public IEnumerable<string> Parse(byte[] payload)
+        public IEnumerable<string> Parse(CapturedPacket captured)
         {
             try
             {
-                int correlatorValue = ExtractBitField(payload, _correlator);
+                int correlatorValue = ExtractBitField(captured.payload, _correlator);
                 JsonObject result = new JsonObject();
 
                 foreach (IcdParam param in _doc.Params)
@@ -37,8 +38,9 @@ namespace TelemetryDevice.ParserBlock
                     {
                         continue;
                     }
-                    result[param.Identifier] = DecodeField(payload, param);
+                    result[param.Identifier] = DecodeField(captured.payload, param);
                 }
+                result["Timestamp"] = JsonValue.Create(captured.Timestamp);
 
                 return new[] { result.ToJsonString() }; // parser output is json
             }
