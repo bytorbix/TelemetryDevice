@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks.Dataflow;
 
 namespace TelemetryDevice.KafkaBlock
@@ -6,7 +7,7 @@ namespace TelemetryDevice.KafkaBlock
     public class Kafka : IDisposable
     {
         private readonly ILogger<Kafka> _logger;
-        private readonly IProducer<Null, string> _producer;
+        private readonly IProducer<string, string> _producer;
         private readonly string _topic;
         public ActionBlock<string> Block { get; }
 
@@ -19,17 +20,25 @@ namespace TelemetryDevice.KafkaBlock
             {
                 BootstrapServers = configuration["Kafka:BootstrapServers"] ?? throw new InvalidOperationException("Kafka:BootstrapServers is not configured")
             };
-            _producer = new ProducerBuilder<Null, string>(config).Build();
+            _producer = new ProducerBuilder<string, string>(config).Build();
             Block = new ActionBlock<string>(PublishAsync);
         }
 
         private async Task PublishAsync(string json)
         {
+            JsonNode? root = JsonNode.Parse(json);
+            if (root?["Tail number"] is not JsonNode tailNumberNode)
+            {
+                _logger.LogWarning("Dropping message: 'Tail number' field missing from parsed telemetry.");
+                return;
+            }
+            string tailNumber = tailNumberNode.ToString();
+
             try
             {
-                await _producer.ProduceAsync(_topic, new Message<Null, string> { Value = json });
+                await _producer.ProduceAsync(_topic, new Message<string, string> { Key = tailNumber, Value = json });
             }
-            catch (ProduceException<Null, string> ex)
+            catch (ProduceException<string, string> ex)
             {
                 _logger.LogWarning(ex, "Dropping message: Kafka produce failed for topic {Topic}.", _topic);
             }
