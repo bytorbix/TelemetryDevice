@@ -61,7 +61,7 @@ namespace TelemetryDevice.BuilderBlock
                 int paramValue = (payload[_tailNumber.Location + 1] << 8) | payload[_tailNumber.Location]; // 2 Byte value param
                 if (!(paramValue >= _tailNumber.Min && paramValue <= _tailNumber.Max) || !_activeTailNumbers.ContainsKey(paramValue))
                 {
-                    _logger.LogWarning("Dropping payload: {Field} mismatch.", _tailNumber.Identifier);
+                    _logger.LogWarning("Dropping payload: {Field} mismatch (received {Received}, expected {Expected}).", _tailNumber.Identifier, paramValue, _tailNumber);
                     return false;
                 }
 
