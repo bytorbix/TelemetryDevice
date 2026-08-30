@@ -1,0 +1,96 @@
+{
+  "info": {
+    "_postman_id": "ee4ecaf2-a1fb-4b37-85f1-018c2403364c",
+    "name": "Telemetry Device",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "55307522",
+    "_collection_link": "https://go.postman.co/collection/55307522-ee4ecaf2-a1fb-4b37-85f1-018c2403364c?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Register Tail Number",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8081/api/listener/42/register",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["api", "listener", "42", "register"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Start Listener",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"Ip\": \"172.18.0.2\", \"Port\": 5000 }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/listener/start",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["api", "listener", "start"]
+        },
+        "description": "Ip must be the actual docker-network IP of the container sending UDP traffic (e.g. telemetry-sim on documents_default) -- pcap filters don't resolve container DNS names. Re-check with `docker inspect telemetry-sim --format '{{.NetworkSettings.Networks.documents_default.IPAddress}}'` if the container has been recreated since 172.18.0.6 was captured."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Active Tail Numbers",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8081/api/listener/active",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["api", "listener", "active"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Stop Listener",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8081/api/listener/stop",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["api", "listener", "stop"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Remove Tail Number",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8081/api/listener/42/remove",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["api", "listener", "42", "remove"]
+        }
+      },
+      "response": []
+    }
+  ]
+}
