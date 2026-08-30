@@ -4,7 +4,7 @@ using TelemetryDevice.ListenerBlock;
 
 namespace TelemetryDevice.Controllers
 {
-    public record StartListenerRequest(string Ip, int Port, int TailNumber);
+    public record StartListenerRequest(string Ip, int Port);
 
     [ApiController]
     [Route("api/listener")]
@@ -15,7 +15,6 @@ namespace TelemetryDevice.Controllers
         {
             try
             {
-                builder.SetExpectedTailNumber(request.TailNumber);
                 listener.StartListening(request.Ip, request.Port);
                 return Accepted();
             }
@@ -45,6 +44,26 @@ namespace TelemetryDevice.Controllers
             {
                 return NotFound(ex.Message);
             }
+        }
+
+        [HttpPost("{tailNumber:int}/register")]
+        public IActionResult AddTailNumber(int tailNumber)
+        {
+            builder.AddTailNumber(tailNumber);
+            return Ok();
+        }
+
+        [HttpDelete("{tailNumber:int}/remove")]
+        public IActionResult RemoveTailNumber(int tailNumber)
+        {
+            builder.RemoveTailNumber(tailNumber);
+            return Ok();
+        }
+
+        [HttpGet("active")]
+        public IActionResult GetActiveTailNumbers()
+        {
+            return Ok(builder.GetActiveTailNumbers());
         }
     }
 }
