@@ -46,7 +46,7 @@ namespace TelemetryDevice.ListenerBlock
         public void Open(ICaptureDevice device, PacketArrivalEventHandler handler, string filter="udp and port 5000")
         {
 
-            device.Open(DeviceModes.Promiscuous, 1000);
+            device.Open(DeviceModes.Promiscuous, 10);
             device.Filter = filter;
             device.OnPacketArrival += handler;
         }
