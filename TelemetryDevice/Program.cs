@@ -2,7 +2,6 @@ using TelemetryDevice.BuilderBlock;
 using TelemetryDevice.Icd;
 using TelemetryDevice.KafkaBlock;
 using TelemetryDevice.ListenerBlock;
-using TelemetryDevice.MongoBlock;
 using TelemetryDevice.ParserBlock;
 using TelemetryDevice.PipelineBlock;
 
@@ -20,7 +19,6 @@ builder.Services.AddSingleton<Builder>();
 builder.Services.AddSingleton<Listener>();
 builder.Services.AddSingleton<PipelineService>();
 builder.Services.AddSingleton<Kafka>();
-builder.Services.AddSingleton<Mongo>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
