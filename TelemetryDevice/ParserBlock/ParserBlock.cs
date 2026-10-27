@@ -67,6 +67,7 @@ namespace TelemetryDevice.ParserBlock
 
             return param.Type switch
             {
+                IcdDataType.FLOAT when param.Size == 64 => JsonValue.Create(BitConverter.Int64BitsToDouble(value)),
                 IcdDataType.FLOAT => JsonValue.Create(BitConverter.Int32BitsToSingle((int)value)),
                 IcdDataType.INTEGER => JsonValue.Create(value),
                 _ => throw new NotSupportedException($"Unsupported ICD data type: {param.Type}")

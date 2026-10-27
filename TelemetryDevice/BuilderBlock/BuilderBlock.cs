@@ -13,6 +13,7 @@ namespace TelemetryDevice.BuilderBlock
         private readonly IcdParam _sync2;
         private readonly IcdParam _sync3;
         private readonly IcdParam _tailNumber;
+        private readonly int _frameBytes;
         private readonly ConcurrentDictionary<int, byte> _activeTailNumbers = new();
 
         public Builder(IcdDocument doc, ILogger<Builder> logger)
@@ -22,6 +23,8 @@ namespace TelemetryDevice.BuilderBlock
             _sync2 = doc.GetField("sync_2");
             _sync3 = doc.GetField("sync_3");
             _tailNumber = doc.GetField("Tail number");
+            // every packet carries every field (unsent correlator groups are zeros), so the size is fixed
+            _frameBytes = doc.Params.Max(p => p.Location * 8 + (p.Size < 8 ? 8 : p.Size)) / 8;
             Block = new(captured => TryBuild(captured.payload) ? new[] { captured } : Array.Empty<CapturedPacket>());
         }
 
@@ -55,6 +58,13 @@ namespace TelemetryDevice.BuilderBlock
             {
                 if (!ValidateSyncByte(payload, _sync1) || !ValidateSyncByte(payload, _sync2) || !ValidateSyncByte(payload, _sync3))
                 {
+                    return false;
+                }
+
+                // a sender built from a different MissionMapTable.json would decode as garbage, so say so instead
+                if (payload.Length != _frameBytes)
+                {
+                    _logger.LogWarning("Dropping payload: {Length} bytes, but the ICD packet is {Expected} bytes. Is the sender using the same MissionMapTable.json?", payload.Length, _frameBytes);
                     return false;
                 }
 
